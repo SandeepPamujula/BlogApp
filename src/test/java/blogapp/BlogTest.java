@@ -1,13 +1,10 @@
 package blogapp;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import com.jayway.restassured.filter.session.SessionFilter;
 
 import static com.jayway.restassured.RestAssured.*;
-import static com.jayway.restassured.matcher.RestAssuredMatchers.*;
 import static org.hamcrest.Matchers.*;
 
 
@@ -23,9 +20,9 @@ public class BlogTest {
 
 	SessionFilter sessionFilter = new SessionFilter();
 	
-	
-	@Test
-	public void testRegister() {
+
+
+	public void validateregister() {
 		String url = baseURL + "/Services/rest/user/register";
 		
 		given()
@@ -37,8 +34,8 @@ public class BlogTest {
 			.statusCode(204);
 	}
 	
-	@Test
-	public void testLogin11() {
+	
+	public void validatelogin() {
 		String url = baseURL +"/Services/rest/user/auth";
 		given()
 		.filter(sessionFilter)
@@ -47,49 +44,48 @@ public class BlogTest {
 			.post(url)
 		.then()
 			.statusCode(204);
-	}
-	@Test
-	public void testSignin() {
-		
-		String url = baseURL + "/Services/rest/user?signedIn=true";
-		
-		given()
-		.filter(sessionFilter)
-		.when()
-			.get(url)
-		.then()
-			.statusCode(200)
-			.body("[0].userName", equalTo("cmad"));
+
+	
 	}
 	
-//	@Test
-//	public void testLoginNegativeTest() {
-//		String url = baseURL +"/Services/rest/user/auth";
-//		given()
-//			.body("{\"userName\":\"invalidUser\",\"password\":\"abc123\"}")
-//		.when()
-//			.post(url)
-//		.then()
-//			.statusCode(401);
-//	}
-	
+
 	@Test
-	public void testPostBlog() {
-		String url = baseURL +"/Services/rest/blogs";
+	public void test001_Auth(){
+		
+		validateregister();
+		validatelogin();
 		
 		
-	
+	}
+	@Test
+	public void test002_LoginNegativeTest() {
+		String url = baseURL +"/Services/rest/user/auth";
 		given()
-//		.filter(sessionFilter)
-			.sessionId(sessionFilter.getSessionId())
-			.body("{\"content\":\"cmad Blog Content here....\",\"tags\":\"cmad\",\"title\":\"CMAD heading\"}")
+			.body("{\"userName\":\"invalidUser\",\"password\":\"abc123\"}")
 		.when()
 			.post(url)
 		.then()
-			.statusCode(204);
+			.statusCode(404);
 	}
+	
+//	@Test
+//	public void test004_validatepostBlog() {
+//		String url = baseURL +"/Services/rest/blogs";
+//		
+//		
+//	
+//		given()
+////		.filter(new ResponseLoggingFilter())
+//		.filter(sessionFilter)
+////			.sessionId(sessionFilter.getSessionId())
+//			.body("{\"content\":\"cmad Blog Content here....\",\"tags\":\"cmad\",\"title\":\"CMAD heading\"}")
+//		.when()
+//			.post(url)
+//		.then()
+//			.statusCode(204);
+//	}
 	@Test
-	public void testCompanies() {
+	public void test003_validatecompanies() {
 		
 		String url = baseURL + "/Services/rest/company";
 		

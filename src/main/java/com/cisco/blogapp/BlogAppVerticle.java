@@ -66,30 +66,31 @@ public class BlogAppVerticle extends AbstractVerticle{
 	    router.route().handler(CookieHandler.create());
 	    router.route().handler(SessionHandler.create(sessionStore));
 	    
-		// Using Lambda Function
-		router.get("/Services/rest/company").handler( (routingContext) -> {
-			JsonArray resJson = new JsonArray().add(
-					new JsonObject().put("id", "55716669eec5ca2b6ddf5626").put("companyName", "Acme Inc").put("subdomain", "acme")
-				).add(
-						new JsonObject().put("id", "559e4331c203b4638a00ba1a").put("companyName", "Acme Inc").put("subdomain", "acme")
-				);
-			
-			routingContext.response().putHeader("content-type", "application/json").end(resJson.encode());
-		});
-	    
 	    router.get("/Services/rest/company/:companyId/sites").handler(this::handleGetSitesOfCompany);
 		router.get("/Services/rest/company/:companyId/sites/:siteId/departments").handler(this::handleGetDepartmentsOfSite);
 		router.post("/Services/rest/user/register").handler(new UserRegister());
 		router.get("/Services/rest/user").handler(new UserLoader());
-		router.get("/Services/rest/blogs").handler(new Blogget());
-		router.post("/Services/rest/blogs").handler(new Blogpost());
-		router.post("/Services/rest/blogs/:blogId/comments").handler(new CommentPersister());
+		router.get("/Services/rest/blogs").handler(new BlogGet());
+		router.post("/Services/rest/blogs").handler(new BlogPost());
+		router.post("/Services/rest/blogs/:blogId/comments").handler(new BlogComment());
 		router.post("/Services/rest/user/auth").handler(new UserAuth());
 		
-		// StaticHanlder for loading frontend angular app
-		router.route().handler(StaticHandler.create()::handle);
 		
-	
+		
+		// Using Lambda Function
+		router.get("/Services/rest/company").handler( (routingContext) -> {
+			System.out.println("GEt comapnies");
+			JsonArray resJson = new JsonArray().add(
+					new JsonObject().put("id", "55716669eec5ca2b6ddf5626").put("companyName", "Acme Inc").put("subdomain", "acme")
+				).add(
+						new JsonObject().put("id", "559e4331c203b4638a00ba1a").put("companyName", "Cisco").put("subdomain", "Cisco India")
+				);
+			
+			routingContext.response().putHeader("content-type", "application/json").end(resJson.encode());
+		});
+		
+		// StaticHanlder for loading frontend angular app
+				router.route().handler(StaticHandler.create()::handle);
 
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);	
 		System.out.println("BlogAppVerticle verticle started");
@@ -140,7 +141,6 @@ class UserRegister implements Handler<RoutingContext> {
 		HttpServerResponse response = routingContext.response();
 		// Get request Body
 		String json = routingContext.getBodyAsString();
-		System.out.println("UserRegister json:  "	+json);
 		ObjectMapper mapper = new ObjectMapper();
 		UserDTO dto = null;
 		try {
@@ -151,11 +151,20 @@ class UserRegister implements Handler<RoutingContext> {
 		}
 		// Map UserDTO to User Model
 		User u = dto.toModel();
-		Datastore dataStore = ServicesFactory.getMongoDB();
-		// Store User into MongoDB
-		dataStore.save(u);
-		System.out.println("UserRegister: "	+dto.toString());
-		response.setStatusCode(204).end("Data saved");
+		routingContext.vertx().executeBlocking((future) -> {
+			System.out.println("Inside Execute Blocking!!!");
+			Datastore dataStore = ServicesFactory.getMongoDB();
+			// Store User into MongoDB
+			dataStore.save(u);
+			future.complete();
+		}, res -> {
+			if(res.succeeded()) {
+				response.setStatusCode(204).end("Data saved");
+			} else {
+				response.setStatusCode(500).end("Data Not Saved");
+			}
+		});
+		
 		
 	}
 }
@@ -195,7 +204,7 @@ class UserAuth implements Handler<RoutingContext> {
 				}
 			}
 		} else {
-			response.setStatusCode(401).end("not found");
+			response.setStatusCode(404).end("not found");
 		}
 	}
 	
@@ -221,7 +230,6 @@ class UserLoader implements Handler<RoutingContext> {
 				System.out.println("Logged in users List: " + node.toString());
 				response.putHeader("content-type", "application/json");
 				String json = node.toString();
-				System.out.println("Logged in users res : " + json);
 				response.setStatusCode(200).end(json);
 			}
 		}
@@ -229,7 +237,7 @@ class UserLoader implements Handler<RoutingContext> {
 }
 
 
-class Blogpost implements Handler<RoutingContext> {
+class BlogPost implements Handler<RoutingContext> {
 	public void handle(RoutingContext routingContext) {
 		System.out.println("Thread BlogPersister: "
 				+ Thread.currentThread().getId());
@@ -265,7 +273,7 @@ class Blogpost implements Handler<RoutingContext> {
 	}
 }
 
-class Blogget implements Handler<RoutingContext> {
+class BlogGet implements Handler<RoutingContext> {
 	public void handle(RoutingContext routingContext) {
 		System.out.println("Thread BlogList: " + Thread.currentThread().getId());
 		HttpServerResponse response = routingContext.response();
@@ -297,15 +305,15 @@ class Blogget implements Handler<RoutingContext> {
 				e.printStackTrace();
 			}
 		} else {
-			response.setStatusCode(401).end("not found");
+			response.setStatusCode(404).end("not found");
 		}
 	}
 }
 
 
-class CommentPersister implements Handler<RoutingContext> {
+class BlogComment implements Handler<RoutingContext> {
 	public void handle(RoutingContext routingContext) {
-		System.out.println("Thread CommentPersister: "
+		System.out.println("Thread BlogComment: "
 				+ Thread.currentThread().getId());
 		HttpServerResponse response = routingContext.response();
 		String blogId = routingContext.request().getParam("blogId");
