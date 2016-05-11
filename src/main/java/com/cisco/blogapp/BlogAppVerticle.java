@@ -92,8 +92,8 @@ public class BlogAppVerticle extends AbstractVerticle{
 		// StaticHanlder for loading frontend angular app
 				router.route().handler(StaticHandler.create()::handle);
 
-		vertx.createHttpServer().requestHandler(router::accept).listen(8866);	
-		System.out.println("BlogAppVerticle verticle started. port:8866");
+		vertx.createHttpServer().requestHandler(router::accept).listen(8090);	
+		System.out.println("BlogAppVerticle verticle started. port:8090");
 		startFuture.complete();
 	}
 	
