@@ -1,8 +1,16 @@
 package blogapp;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import com.cisco.blogapp.BlogAppVerticle;
 import com.jayway.restassured.filter.session.SessionFilter;
+
+import io.vertx.core.Vertx;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import static com.jayway.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
@@ -11,17 +19,24 @@ import static org.hamcrest.Matchers.*;
 //import static com.jayway.restassured.module.mockmvc.RestAssuredMockMvc.given;
 //import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 //import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
-
+@RunWith(VertxUnitRunner.class)
 public class BlogTest {
 	
 	String baseURL = "http://localhost:8090";
 	String userName = "cmad";
 	String password = "password";
-
+	Vertx vertx;
 	SessionFilter sessionFilter = new SessionFilter();
 	
-
-
+	@Before
+    public void before(TestContext context) {
+        vertx = Vertx.vertx();
+        vertx.deployVerticle(new BlogAppVerticle(), context.asyncAssertSuccess());
+    }
+	@After
+    public void after(TestContext context) {
+        vertx.close(context.asyncAssertSuccess());
+    }
 	public void validateregister() {
 		String url = baseURL + "/Services/rest/user/register";
 		
