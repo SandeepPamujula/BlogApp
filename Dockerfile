@@ -9,7 +9,7 @@ ENV VERTICLE_CONFIG_FILE config.properties
 # Set the location of the verticles
 ENV VERTICLE_HOME /usr/verticles
 
-EXPOSE 8080
+EXPOSE 8090
 
 # Copy your verticle to the container                   
 COPY $VERTICLE_FILE $VERTICLE_HOME/
