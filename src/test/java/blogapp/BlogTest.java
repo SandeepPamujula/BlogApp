@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.*;
 
 public class BlogTest {
 	
-	String baseURL = "http://localhost:8080";
+	String baseURL = "http://localhost:8090";
 	String userName = "cmad";
 	String password = "password";
 
